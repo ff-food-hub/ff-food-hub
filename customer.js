@@ -1,1 +1,1 @@
-import{c as t,j as e,r,i as s,C as o,S as a}from"./index.js";t.createRoot(document.getElementById("root")).render(e.jsx(r.StrictMode,{children:s()?e.jsx(o,{}):e.jsx(a,{})}));
+import{c as r,j as e,r as t,i as o,S as s}from"./index.js";import{C as i}from"./App.js";r.createRoot(document.getElementById("root")).render(e.jsx(t.StrictMode,{children:o()?e.jsx(i,{}):e.jsx(s,{})}));
