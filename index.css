@@ -125,4 +125,23 @@ main>section,main>div{animation:ff-rise .4s ease backwards}
 @media(min-width:1024px){.ff-restbar{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
+/* ---------- Admin dropdown menu ---------- */
+.ff-nav{position:relative;z-index:35;margin-bottom:1.25rem}
+.ff-nav-btn{position:relative;display:flex;width:100%;align-items:center;justify-content:space-between;gap:.75rem;background:#fff;border-radius:999px;padding:.8rem 1.1rem;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left}
+.ff-nav-btn.is-open{box-shadow:0 0 0 2px #a60603,0 6px 18px rgba(166,6,3,.18)}
+.ff-nav-cur{display:flex;align-items:center;gap:.35rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ff-burger{margin-right:.35rem;font-size:1.1rem;line-height:1}
+.ff-caret{color:#a60603}
+.ff-nav-dot{position:absolute;top:-3px;right:-3px;width:.9rem;height:.9rem;background:#ef4444;border:2px solid #f1f1f1;border-radius:50%;animation:ff-pulse 1.6s ease-out infinite}
+.ff-nav-menu{position:absolute;top:calc(100% + .5rem);left:0;right:0;background:#fff;border:1px solid #e7e5e4;border-radius:1.5rem;padding:.5rem;box-shadow:0 16px 40px rgba(59,10,7,.25);animation:ff-pop .18s ease both;max-height:calc(100dvh - 9rem);overflow-y:auto}
+.ff-nav-item{display:flex;width:100%;align-items:center;gap:.75rem;padding:.8rem .9rem;border-radius:1rem;font-weight:600;font-size:.95rem;text-align:left;background:transparent}
+.ff-nav-item:hover{background:#f5f5f4}
+.ff-nav-item.on{background:#a60603;color:#fff}
+.ff-nav-ico{width:1.4rem;text-align:center}
+.ff-nav-count{margin-left:auto;background:#f1f1f1;border-radius:999px;padding:.1rem .65rem;font-size:.75rem;font-weight:700;color:#44403c}
+.ff-nav-count.hot{background:#ef4444;color:#fff}
+.ff-nav-item.on .ff-nav-count{background:rgba(255,255,255,.25);color:#fff}
+.ff-nav-lock{margin-left:auto;opacity:.55}
+@media(min-width:640px){.ff-nav-btn{width:auto;min-width:19rem}.ff-nav-menu{right:auto;width:21rem}}
+
 .ff-restbar{animation:none!important}main.max-w-md>.ff-hero{justify-self:center}@media(min-width:1024px){main.max-w-md>.ff-hero{max-width:46rem;width:100%}}

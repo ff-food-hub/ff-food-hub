@@ -14,7 +14,7 @@
     <script type="module" crossorigin src="./kitchen.js"></script>
     <link rel="modulepreload" crossorigin href="./index.js">
     <link rel="stylesheet" crossorigin href="./index.css">
-      <script>["gesturestart","gesturechange","gestureend"].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault()})});</script>
+      <script>document.addEventListener("wheel",function(e){if(e.ctrlKey)e.preventDefault()},{passive:false});document.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&["+","=","-","_","0"].indexOf(e.key)>-1)e.preventDefault()});["gesturestart","gesturechange","gestureend"].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault()})});</script>
   </head>
   <body>
     <div id="root"></div>
