@@ -192,9 +192,14 @@ html[data-theme=dark] .ff-nav-dot{border-color:#14100f}
 html[data-theme=dark] .ff-nav-btn.is-open{box-shadow:0 0 0 2px #ff6b63,0 6px 18px rgba(0,0,0,.4)}
 /* keep dark text on bright fills */
 html[data-theme=dark] .bg-ff-gold,html[data-theme=dark] .bg-ff-gold *,html[data-theme=dark] .\!bg-ff-gold,html[data-theme=dark] .\!bg-ff-gold *,html[data-theme=dark] .bg-amber-400,html[data-theme=dark] .bg-amber-400 *,html[data-theme=dark] .bg-yellow-300,html[data-theme=dark] .bg-yellow-300 *,html[data-theme=dark] .bg-orange-400,html[data-theme=dark] .bg-orange-400 *{color:#3b0a07}
-html[data-theme=dark] .bg-ff-red,html[data-theme=dark] .bg-ff-red *,html[data-theme=dark] .bg-ff-dark,html[data-theme=dark] .bg-ff-dark *{color:inherit}
 html[data-theme=dark] .bg-ff-dark{background-color:#3b0a07}
 html[data-theme=dark] img:not(.keep){filter:brightness(.92)}
+html[data-theme=dark] .ff-modal h3{color:#fdc826}
+html[data-theme=dark] .ff-loc-alt{color:#ff8a82}
+html[data-theme=dark] .ff-loc-meta,html[data-theme=dark] .ff-loc-meta *{color:#d6cbc6}
+html[data-theme=dark] .bg-green-600{background-color:#15803d}
+html[data-theme=dark] .bg-green-500{background-color:#16a34a}
+html[data-theme=dark] .bg-red-600{background-color:#b91c1c}
 /* toggle button */
 #ff-theme{position:fixed;left:max(.75rem,env(safe-area-inset-left));bottom:max(.75rem,env(safe-area-inset-bottom));z-index:55;width:2.6rem;height:2.6rem;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:#fff;color:#3b0a07;font-size:1.15rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.2);transition:transform .15s ease,background .2s;touch-action:manipulation}
 #ff-theme:active{transform:scale(.9)}
