@@ -177,12 +177,64 @@ function FFPreBtn({isPre:pre,rest,next,time,delivery,busy,go,className:cls,label
     ]})}),
   ]});
 }
+
+const ffKnown=["hotel","hall","halls","house","houses","block","blocks","gate","gates","room","rooms","annex","lodge","home","homes","hill","mall","shop","shops","store","stores","plaza","court","lane","road","street","avenue","close","city","town","park","view","side","back","front","behind","opposite","estate","tower","towers","wing","floor","flat","flats","stop","point","bank","fuel","gas","club","cafe","bar","spot","yard","line","square","circle","market","clinic","chapel","office","mosque","church"];
+const ffDict=["entrance","hostel","junction","campus","building","school","church","market","library","hospital","restaurant","stadium","canteen","cafeteria","residence","apartment","apartments","complex","quarters","university","polytechnic","technical","station","gateway","chapel","bungalow","mosque","clinic","pharmacy","office","offices"];
+function ffNormName(v){
+  return String(v||"").toLowerCase().replace(/['\u2019`]/g,"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/([a-z])(\d)/g,"$1 $2").replace(/(\d)([a-z])/g,"$1 $2").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim().split(" ").filter(w=>w&&w!=="the").join(" ");
+}
+function ffIns(a,b){ // a and b differ by exactly one insertion/deletion or one adjacent swap
+  if(a===b)return false;const la=a.length,lb=b.length;
+  if(Math.abs(la-lb)>1)return false;
+  if(la===lb){let i=0;while(i<la&&a[i]===b[i])i++;return i<la-1&&a[i]===b[i+1]&&a[i+1]===b[i]&&a.slice(i+2)===b.slice(i+2)}
+  const sm=la<lb?a:b,lg=la<lb?b:a;let i=0;while(i<sm.length&&sm[i]===lg[i])i++;return sm.slice(i)===lg.slice(i+1);
+}
+function ffSub(a,b){ // exactly one substituted letter
+  if(a.length!==b.length||a===b)return false;let n=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i]&&++n>1)return false;return n===1;
+}
+function ffSnap(w){ // snap a misspelt common place-word (entrace, entrence, hostle) to the right word
+  if(!/^[a-z]{5,}$/.test(w)||ffDict.includes(w)||ffKnown.includes(w)||(w.length===5&&w.endsWith("s")))return w;
+  for(const d of ffDict)if(ffIns(w,d)||(w.length>=6&&ffSub(w,d)))return d;
+  return w;
+}
+function ffKey(w){ // sound-alike key: klassic = classic, kumassi = kumasi
+  return w.replace(/ph/g,"f").replace(/ck/g,"k").replace(/c/g,"k").replace(/z/g,"s").replace(/y/g,"i").replace(/(.)\1+/g,"$1");
+}
+function ffTokSame(a,b){
+  if(a===b)return true;
+  if(!/^[a-z]+$/.test(a)||!/^[a-z]+$/.test(b))return false; // numbers and letter+number codes must match exactly
+  if(a.length>=5&&b.length>=5){const ka=ffKey(a),kb=ffKey(b);if(ka.length>=4&&ka===kb)return true}
+  if(a.length>=6&&b.length>=6&&ffIns(a,b))return true;
+  return false;
+}
+function ffSimilar(a,b){ // a, b: normalised names
+  const x=a.split(" ").map(ffSnap),y=b.split(" ").map(ffSnap);
+  if(x.length!==y.length)return false;
+  let diff=0;
+  for(let i=0;i<x.length;i++){if(x[i]===y[i])continue;if(!ffTokSame(x[i],y[i]))return false;diff++}
+  return diff<=2;
+}
+function ffCluster(counts){ // Map(normName -> count)  =>  Map(normName -> canonical normName); no chaining
+  const names=[...counts.entries()].sort((p,q)=>q[1]-p[1]||p[0].localeCompare(q[0]));
+  const canon=[],map=new Map();
+  for(const[n]of names){
+    const hit=canon.find(c=>ffSimilar(n,c));
+    if(hit)map.set(n,hit);else{canon.push(n);map.set(n,n)}
+  }
+  return map;
+}
 function FFLocRank({orders:list}){
   const[period,setPeriod]=o.useState("all");
   const[dir,setDir]=o.useState("most");
   const[doneOnly,setDoneOnly]=o.useState(false);
   const[q,setQ]=o.useState("");
-  const norm=v=>String(v||"").toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
+  const[merge,setMerge]=o.useState(true);
+  const norm=ffNormName;
+  const canonOf=o.useMemo(()=>{
+    const counts=new Map();
+    for(const od of list){if(od.orderType!=="Delivery"||od.status==="Cancelled")continue;const k=norm(od.location);if(k)counts.set(k,(counts.get(k)||0)+1)}
+    return merge?ffCluster(counts):new Map([...counts.keys()].map(k=>[k,k]));
+  },[list,merge]);
   const data=o.useMemo(()=>{
     const since=period==="all"?0:Date.now()-(period==="7"?7:30)*864e5;
     const map=new Map();
@@ -191,7 +243,7 @@ function FFLocRank({orders:list}){
       if(doneOnly&&od.status!=="Completed")continue;
       const t=new Date(od.createdAt).getTime();
       if(since&&!(t>=since))continue;
-      const key=norm(od.location);if(!key)continue;
+      const n1=norm(od.location);if(!n1)continue;const key=canonOf.get(n1)||n1;
       let r=map.get(key);
       if(!r){r={key,names:new Map(),deliveries:0,bowls:0,fees:0,last:0};map.set(key,r)}
       const raw=String(od.location).trim();
@@ -201,12 +253,12 @@ function FFLocRank({orders:list}){
       r.fees+=Number(od.deliveryCost||0);
       if(t>r.last)r.last=t;
     }
-    const rows=[...map.values()].map(r=>({...r,label:[...r.names.entries()].sort((a,b)=>b[1]-a[1])[0][0]}));
+    const rows=[...map.values()].map(r=>{const sorted=[...r.names.entries()].sort((a,b)=>b[1]-a[1]);const label=sorted[0][0];const seen=new Set([label.toLowerCase().replace(/\s+/g," ")]);const alt=[];for(const[nm]of sorted){const kk=nm.toLowerCase().replace(/\s+/g," ");if(!seen.has(kk)){seen.add(kk);alt.push(nm)}}return{...r,label,alt}});
     rows.sort((a,b)=>b.deliveries-a.deliveries||b.last-a.last||a.label.localeCompare(b.label));
     rows.forEach((r,i)=>{r.rank=i+1});
     return rows;
-  },[list,period,doneOnly]);
-  const shown=(dir==="most"?data:[...data].reverse()).filter(r=>!q.trim()||norm(r.label).includes(norm(q)));
+  },[list,period,doneOnly,canonOf]);
+  const shown=(dir==="most"?data:[...data].reverse()).filter(r=>!q.trim()||[r.label,...r.alt].some(x=>norm(x).includes(norm(q))));
   const top=data[0]?data[0].deliveries:1;
   const total=data.reduce((n,r)=>n+r.deliveries,0);
   const csv=()=>{
@@ -228,7 +280,7 @@ function FFLocRank({orders:list}){
     e.jsxs("div",{className:"ff-chiprow",children:[
       e.jsx("div",{className:"ff-chips",role:"group","aria-label":"Time period",children:[["7","Last 7 days"],["30","Last 30 days"],["all","All time"]].map(([v,l])=>chip(period===v,l,()=>setPeriod(v),v))}),
       e.jsx("div",{className:"ff-chips",role:"group","aria-label":"Order",children:[["most","Most → Least"],["least","Least → Most"]].map(([v,l])=>chip(dir===v,l,()=>setDir(v),v))}),
-      e.jsxs("label",{className:"ff-check",children:[e.jsx("input",{type:"checkbox",checked:doneOnly,onChange:ev=>setDoneOnly(ev.target.checked)})," Completed only"]}),
+      e.jsxs("label",{className:"ff-check",children:[e.jsx("input",{type:"checkbox",checked:doneOnly,onChange:ev=>setDoneOnly(ev.target.checked)})," Completed only"]}),e.jsxs("label",{className:"ff-check",children:[e.jsx("input",{type:"checkbox",checked:merge,onChange:ev=>setMerge(ev.target.checked)})," Combine similar spellings"]}),
     ]}),
     e.jsx("input",{value:q,onChange:ev=>setQ(ev.target.value),placeholder:"Search a location",className:"w-full border rounded-2xl px-4 py-3 bg-white"}),
     shown.length===0?e.jsx("div",{className:"bg-white border rounded-3xl p-8 text-center text-stone-500",children:data.length===0?"No deliveries yet for this period.":"No location matches your search."}):
@@ -239,7 +291,7 @@ function FFLocRank({orders:list}){
         e.jsxs("b",{className:"ff-loc-count",children:[r.deliveries,e.jsx("small",{children:r.deliveries===1?" delivery":" deliveries"})]}),
       ]}),
       e.jsx("div",{className:"ff-bar","aria-hidden":"true",children:e.jsx("i",{style:{width:`${Math.max(4,Math.round(r.deliveries/top*100))}%`}})}),
-      e.jsxs("p",{className:"ff-loc-meta",children:["🍚 ",r.bowls," bowl",r.bowls===1?"":"s"," · 🚲 ",d(r.fees)," delivery fees · Last: ",new Date(r.last).toLocaleDateString()]}),
+      r.alt.length?e.jsxs("p",{className:"ff-loc-alt",children:["Also written as: ",r.alt.join(", ")]}):null,e.jsxs("p",{className:"ff-loc-meta",children:["🍚 ",r.bowls," bowl",r.bowls===1?"":"s"," · 🚲 ",d(r.fees)," delivery fees · Last: ",new Date(r.last).toLocaleDateString()]}),
     ]},r.key))}),
   ]});
 }
