@@ -146,6 +146,13 @@ main>section,main>div{animation:ff-rise .4s ease backwards}
 
 .ff-loc-alt{font-size:.78rem;color:#a60603;margin:.1rem 0 .35rem;overflow-wrap:anywhere}
 
+/* ---------- Fluid width on large screens: pages fill the window automatically ---------- */
+@media(min-width:1024px){
+  .max-w-7xl{max-width:none!important;padding-left:clamp(1rem,2.5vw,3.5rem)!important;padding-right:clamp(1rem,2.5vw,3.5rem)!important}
+  .ff-kroot{max-width:none!important;padding-left:clamp(1rem,2.5vw,3.5rem)!important;padding-right:clamp(1rem,2.5vw,3.5rem)!important}
+}
+@media(min-width:1536px){main.max-w-md{max-width:min(100%,96rem)}}
+
 /* ---------- Dark mode ---------- */
 html{color-scheme:light}
 html[data-theme=dark]{color-scheme:dark}
